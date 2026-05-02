@@ -153,4 +153,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-Built by [Freddie Ley](freddie.ley@icloud.com)
+Built by Freddie Ley
