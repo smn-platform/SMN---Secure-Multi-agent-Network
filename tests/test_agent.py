@@ -1,9 +1,6 @@
 """Tests for the Agent class and governance checks."""
 
-import pytest
-
 from smn.core.agent import Agent
-from smn.core.policy import Policy, PolicyRule
 from smn.core.tools import tool
 from smn.governance.checks import check_compliance
 

@@ -1,7 +1,5 @@
 """Tests for identity and permission checks."""
 
-import pytest
-
 from smn.core.identity import Identity, check_permissions
 
 
@@ -23,7 +21,8 @@ class TestIdentity:
 
     def test_has_all_scopes(self):
         identity = Identity(
-            agent_id="a1", tenant_id="t1",
+            agent_id="a1",
+            tenant_id="t1",
             scopes=frozenset(["tickets:read", "billing:read"]),
         )
         assert identity.has_all_scopes(["tickets:read", "billing:read"]) is True

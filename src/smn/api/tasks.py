@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from smn.api.deps import ListResponse, PaginationParams
 from smn.auth import get_current_tenant
-from smn.config import settings
 from smn.core.agent import Agent
 from smn.core.policy import load_policy
 from smn.db import get_db

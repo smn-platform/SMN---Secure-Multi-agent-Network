@@ -99,20 +99,23 @@ class StorageConnector(BaseConnector):
             raise ValueError(f"Blocked file extension: {ext}")
 
         if self._allowed_extensions and ext not in self._allowed_extensions:
-            raise ValueError(
-                f"Extension {ext} not in allowed list: {self._allowed_extensions}"
-            )
+            raise ValueError(f"Extension {ext} not in allowed list: {self._allowed_extensions}")
 
     async def _list_objects(self, prefix: str, max_keys: int) -> list[dict[str, Any]]:
         """List objects — implementation delegates to cloud SDK."""
         if self._provider == "s3":
             import boto3
+
             s3 = boto3.client("s3")
             resp = s3.list_objects_v2(
                 Bucket=self._bucket, Prefix=prefix, MaxKeys=min(max_keys, 1000)
             )
             return [
-                {"key": obj["Key"], "size": obj["Size"], "modified": obj["LastModified"].isoformat()}
+                {
+                    "key": obj["Key"],
+                    "size": obj["Size"],
+                    "modified": obj["LastModified"].isoformat(),
+                }
                 for obj in resp.get("Contents", [])
             ]
         else:
@@ -121,6 +124,7 @@ class StorageConnector(BaseConnector):
     async def _get_object(self, key: str) -> dict[str, Any]:
         if self._provider == "s3":
             import boto3
+
             s3 = boto3.client("s3")
             resp = s3.get_object(Bucket=self._bucket, Key=key)
             data = resp["Body"].read()
@@ -135,17 +139,18 @@ class StorageConnector(BaseConnector):
 
     async def _put_object(self, key: str, data: bytes, content_type: str) -> dict[str, Any]:
         if len(data) > self._max_upload_bytes:
-            raise ValueError(
-                f"Upload size {len(data)} exceeds limit {self._max_upload_bytes}"
-            )
+            raise ValueError(f"Upload size {len(data)} exceeds limit {self._max_upload_bytes}")
         if "storage:write" not in self.config.scopes:
             raise PermissionError("Upload requires 'storage:write' scope")
 
         if self._provider == "s3":
             import boto3
+
             s3 = boto3.client("s3")
             s3.put_object(
-                Bucket=self._bucket, Key=key, Body=data,
+                Bucket=self._bucket,
+                Key=key,
+                Body=data,
                 ContentType=content_type,
                 ServerSideEncryption="AES256",
             )
@@ -156,6 +161,7 @@ class StorageConnector(BaseConnector):
     async def _delete_object(self, key: str) -> dict[str, Any]:
         if self._provider == "s3":
             import boto3
+
             s3 = boto3.client("s3")
             s3.delete_object(Bucket=self._bucket, Key=key)
             return {"key": key, "status": "deleted"}

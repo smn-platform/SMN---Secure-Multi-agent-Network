@@ -30,7 +30,6 @@ def client():
     # Re-import to pick up the test database URL
     from smn import db as db_mod
     from smn.config import Settings
-    from smn.models import Base
 
     test_settings = Settings()
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine

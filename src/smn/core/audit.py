@@ -98,9 +98,7 @@ async def verify_chain(db: AsyncSession, tenant_id: str) -> tuple[bool, str]:
     indicates where the break occurred.
     """
     result = await db.execute(
-        select(AuditEntry)
-        .where(AuditEntry.tenant_id == tenant_id)
-        .order_by(AuditEntry.id.asc())
+        select(AuditEntry).where(AuditEntry.tenant_id == tenant_id).order_by(AuditEntry.id.asc())
     )
     entries = result.scalars().all()
 

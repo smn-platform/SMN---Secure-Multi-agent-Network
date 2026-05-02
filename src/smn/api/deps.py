@@ -7,11 +7,11 @@ from typing import Generic, Sequence, TypeVar
 
 from fastapi import Depends, Query, Security
 from pydantic import BaseModel
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from smn.api.errors import AuthorizationError
-from smn.auth import API_KEY_HEADER, authenticate_key, hash_key
+from smn.auth import API_KEY_HEADER, hash_key
 from smn.db import get_db
 from smn.models import APIKeyRecord, Tenant
 
@@ -83,6 +83,8 @@ async def require_admin(
 
     scopes = json.loads(key_record.scopes)
     if "admin" not in scopes and "admin:full" not in scopes:
-        raise AuthorizationError("Admin scope required. Your API key does not have admin permissions.")
+        raise AuthorizationError(
+            "Admin scope required. Your API key does not have admin permissions."
+        )
 
     return tenant

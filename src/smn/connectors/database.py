@@ -69,6 +69,7 @@ class DatabaseConnector(BaseConnector):
             return False
         try:
             from sqlalchemy import text
+
             async with self._engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
             return True
@@ -103,7 +104,8 @@ class DatabaseConnector(BaseConnector):
         async with self._session_factory() as session:
             if operation == "query":
                 result = await session.execute(
-                    text(f"{sql} LIMIT {self._max_rows}") if "LIMIT" not in sql.upper()
+                    text(f"{sql} LIMIT {self._max_rows}")
+                    if "LIMIT" not in sql.upper()
                     else text(sql),
                     params,
                 )

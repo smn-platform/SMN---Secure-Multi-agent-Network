@@ -1,11 +1,10 @@
 """Tests for auth module — API key management and authentication."""
 
-import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from smn.auth import authenticate_key, create_api_key, generate_api_key, hash_key, revoke_api_key
-from smn.models import APIKeyRecord, Tenant
+from smn.models import Tenant
 
 
 def test_generate_api_key():

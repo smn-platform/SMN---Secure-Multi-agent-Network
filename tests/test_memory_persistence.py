@@ -9,7 +9,6 @@ from smn.core.memory import (
     flush_memory_to_db,
     load_memory_from_db,
 )
-from smn.models import MemoryEntry
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,6 @@
 """Tests for the immutable audit log with hash chaining."""
 
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from smn.core.audit import get_audit_trail, log_event, verify_chain
@@ -24,10 +23,16 @@ class TestAuditLog:
     @pytest.mark.asyncio
     async def test_hash_chain(self, db: AsyncSession):
         e1 = await log_event(
-            db, tenant_id="t1", event_type="a", action="first",
+            db,
+            tenant_id="t1",
+            event_type="a",
+            action="first",
         )
         e2 = await log_event(
-            db, tenant_id="t1", event_type="b", action="second",
+            db,
+            tenant_id="t1",
+            event_type="b",
+            action="second",
         )
         # Second entry's prev_hash should be first entry's hash
         assert e2.prev_hash == e1.entry_hash
@@ -36,7 +41,10 @@ class TestAuditLog:
     async def test_verify_chain_valid(self, db: AsyncSession):
         for i in range(5):
             await log_event(
-                db, tenant_id="t1", event_type="test", action=f"action_{i}",
+                db,
+                tenant_id="t1",
+                event_type="test",
+                action=f"action_{i}",
             )
         is_valid, msg = await verify_chain(db, "t1")
         assert is_valid is True

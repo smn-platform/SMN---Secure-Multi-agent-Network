@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import pytest
 
-from smn.core.policy import Policy, PolicyDecision, PolicyRule, _evaluate_conditions
+from smn.core.policy import Policy, PolicyRule, _evaluate_conditions
 
 
 class TestEvaluateConditions:
@@ -46,46 +45,57 @@ class TestEvaluateConditions:
     def test_day_of_week_pass(self):
         # 2024-06-17 is a Monday
         now = datetime(2024, 6, 17, 12, 0, tzinfo=timezone.utc)
-        assert _evaluate_conditions(
-            {"day_of_week": ["Monday", "Tuesday"]}, {"_now": now}
-        ) is True
+        assert _evaluate_conditions({"day_of_week": ["Monday", "Tuesday"]}, {"_now": now}) is True
 
     def test_day_of_week_fail(self):
         # 2024-06-15 is a Saturday
         now = datetime(2024, 6, 15, 12, 0, tzinfo=timezone.utc)
-        assert _evaluate_conditions(
-            {"day_of_week": ["Monday", "Tuesday"]}, {"_now": now}
-        ) is False
+        assert _evaluate_conditions({"day_of_week": ["Monday", "Tuesday"]}, {"_now": now}) is False
 
     def test_context_match_pass(self):
-        assert _evaluate_conditions(
-            {"context_match": {"env": "prod", "tier": "enterprise"}},
-            {"env": "prod", "tier": "enterprise"},
-        ) is True
+        assert (
+            _evaluate_conditions(
+                {"context_match": {"env": "prod", "tier": "enterprise"}},
+                {"env": "prod", "tier": "enterprise"},
+            )
+            is True
+        )
 
     def test_context_match_fail(self):
-        assert _evaluate_conditions(
-            {"context_match": {"env": "prod"}},
-            {"env": "staging"},
-        ) is False
+        assert (
+            _evaluate_conditions(
+                {"context_match": {"env": "prod"}},
+                {"env": "staging"},
+            )
+            is False
+        )
 
     def test_context_match_missing_key(self):
-        assert _evaluate_conditions(
-            {"context_match": {"env": "prod"}},
-            {},
-        ) is False
+        assert (
+            _evaluate_conditions(
+                {"context_match": {"env": "prod"}},
+                {},
+            )
+            is False
+        )
 
     def test_risk_level_pass(self):
-        assert _evaluate_conditions(
-            {"risk_level": "high"},
-            {"risk_level": "high"},
-        ) is True
+        assert (
+            _evaluate_conditions(
+                {"risk_level": "high"},
+                {"risk_level": "high"},
+            )
+            is True
+        )
 
     def test_risk_level_fail(self):
-        assert _evaluate_conditions(
-            {"risk_level": "high"},
-            {"risk_level": "low"},
-        ) is False
+        assert (
+            _evaluate_conditions(
+                {"risk_level": "high"},
+                {"risk_level": "low"},
+            )
+            is False
+        )
 
     def test_unknown_condition_ignored(self):
         assert _evaluate_conditions({"future_feature": True}, {}) is True

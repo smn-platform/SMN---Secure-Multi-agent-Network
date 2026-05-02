@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from smn.core.agent import Agent
-from smn.core.identity import Identity
 from smn.core.policy import Policy, PolicyLimits, PolicyRule
 from smn.core.runtime import StreamEvent, execute_task_stream
 
@@ -109,9 +108,11 @@ async def test_stream_tool_call(mock_rc):
 @pytest.mark.asyncio
 @patch(_RC, new_callable=AsyncMock)
 async def test_stream_policy_deny(mock_rc):
-    agent = _make_agent(policy_rules=[
-        PolicyRule(action="task:execute", effect="deny", reason="blocked"),
-    ])
+    agent = _make_agent(
+        policy_rules=[
+            PolicyRule(action="task:execute", effect="deny", reason="blocked"),
+        ]
+    )
     events = await _collect_events(agent, "do something")
 
     event_types = [e.event for e in events]
@@ -124,7 +125,7 @@ async def test_stream_policy_deny(mock_rc):
 @pytest.mark.asyncio
 @patch(_RC, new_callable=AsyncMock)
 async def test_stream_step_limit(mock_rc):
-    mock_rc.return_value = _llm_tool_call("add", '{}', "c1")
+    mock_rc.return_value = _llm_tool_call("add", "{}", "c1")
     agent = _make_agent(max_steps=1)
     events = await _collect_events(agent, "loop forever")
 
@@ -137,7 +138,7 @@ async def test_stream_step_limit(mock_rc):
 @patch(_RC, new_callable=AsyncMock)
 async def test_stream_unknown_tool(mock_rc):
     mock_rc.side_effect = [
-        _llm_tool_call("nonexistent", '{}', "c1"),
+        _llm_tool_call("nonexistent", "{}", "c1"),
         _llm_final("done"),
     ]
     agent = _make_agent()

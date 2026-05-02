@@ -65,8 +65,7 @@ class ComplianceReport:
         if not applicable:
             return 1.0
         points = sum(
-            1.0 if i.status == "pass" else 0.5 if i.status == "warning" else 0.0
-            for i in applicable
+            1.0 if i.status == "pass" else 0.5 if i.status == "warning" else 0.0 for i in applicable
         )
         return points / len(applicable)
 
@@ -90,9 +89,11 @@ _CAPABILITY_CHECKS: dict[str, Any] = {}
 
 def _check(capability: str):
     """Decorator to register a compliance check function."""
+
     def decorator(func):
         _CAPABILITY_CHECKS[capability] = func
         return func
+
     return decorator
 
 
@@ -258,6 +259,7 @@ def _check_risk_management(agent: Agent, req: FrameworkRequirement) -> Complianc
 
 
 # ── Default handler for unmapped capabilities ────────────────────
+
 
 def _default_check(agent: Agent, req: FrameworkRequirement) -> ComplianceItem:
     return ComplianceItem(

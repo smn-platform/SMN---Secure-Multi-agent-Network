@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 
 import pytest
 from fastapi import FastAPI, Request
@@ -15,7 +14,6 @@ from smn.api.errors import (
     BadRequestError,
     NotFoundError,
     RateLimitError,
-    SMNAPIError,
     install_error_handlers,
 )
 from smn.middleware.idempotency import IdempotencyMiddleware, _store

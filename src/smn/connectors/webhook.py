@@ -24,10 +24,16 @@ from smn.connectors.base import BaseConnector, ConnectorConfig
 
 logger = logging.getLogger(__name__)
 
-_BLOCKED_HOSTS = frozenset([
-    "localhost", "127.0.0.1", "0.0.0.0", "::1",
-    "169.254.169.254", "metadata.google.internal",
-])
+_BLOCKED_HOSTS = frozenset(
+    [
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "::1",
+        "169.254.169.254",
+        "metadata.google.internal",
+    ]
+)
 _MAX_PAYLOAD_BYTES = 1024 * 1024  # 1 MB
 _DEFAULT_TIMEOUT = 10.0
 _MAX_RETRIES = 3
@@ -116,9 +122,7 @@ class WebhookConnector(BaseConnector):
             raise ValueError(f"Blocked host: {hostname}")
 
         if self._allowed_domains and hostname not in self._allowed_domains:
-            raise ValueError(
-                f"Domain '{hostname}' not in allowed list: {self._allowed_domains}"
-            )
+            raise ValueError(f"Domain '{hostname}' not in allowed list: {self._allowed_domains}")
 
     def _sign_payload(self, body: str, timestamp: str) -> str:
         """Generate HMAC-SHA256 signature."""
@@ -149,7 +153,9 @@ class WebhookConnector(BaseConnector):
                     last_error = RuntimeError(f"Server error: {resp.status_code}")
                     logger.warning(
                         "Webhook delivery failed (attempt %d/%d): %s",
-                        attempt, self._max_retries, resp.status_code,
+                        attempt,
+                        self._max_retries,
+                        resp.status_code,
                     )
                 else:
                     return {
@@ -161,11 +167,14 @@ class WebhookConnector(BaseConnector):
                 last_error = exc
                 logger.warning(
                     "Webhook delivery error (attempt %d/%d): %s",
-                    attempt, self._max_retries, exc,
+                    attempt,
+                    self._max_retries,
+                    exc,
                 )
 
             if attempt < self._max_retries:
                 import asyncio
+
                 await asyncio.sleep(2 ** (attempt - 1))
 
         return {

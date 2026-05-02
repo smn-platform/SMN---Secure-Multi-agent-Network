@@ -69,7 +69,9 @@ class AuthenticationError(SMNAPIError):
 class AuthorizationError(SMNAPIError):
     """403 — valid credentials but insufficient permissions."""
 
-    def __init__(self, message: str = "Insufficient permissions.", code: str = "insufficient_scope"):
+    def __init__(
+        self, message: str = "Insufficient permissions.", code: str = "insufficient_scope"
+    ):
         super().__init__(
             status_code=403,
             error_type="authorization_error",
@@ -144,9 +146,7 @@ def install_error_handlers(app: FastAPI) -> None:
         request_id = getattr(request.state, "request_id", None)
         return JSONResponse(
             status_code=exc.status_code,
-            content=_build_error_body(
-                exc.error_type, exc.code, exc.message, exc.param, request_id
-            ),
+            content=_build_error_body(exc.error_type, exc.code, exc.message, exc.param, request_id),
         )
 
     @app.exception_handler(StarletteHTTPException)
@@ -171,9 +171,7 @@ def install_error_handlers(app: FastAPI) -> None:
 
         return JSONResponse(
             status_code=exc.status_code,
-            content=_build_error_body(
-                error_type, code, str(exc.detail), request_id=request_id
-            ),
+            content=_build_error_body(error_type, code, str(exc.detail), request_id=request_id),
         )
 
     @app.exception_handler(RequestValidationError)

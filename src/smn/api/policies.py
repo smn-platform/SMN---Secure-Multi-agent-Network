@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from smn.api.deps import ListResponse, PaginationParams
 from smn.auth import get_current_tenant
-from smn.core.policy import Policy, _parse_policy_file
 from smn.db import get_db
 from smn.governance.frameworks import list_frameworks, get_framework
 from smn.models import PolicyRecord, Tenant
@@ -86,7 +85,8 @@ async def list_policies(
     db: AsyncSession = Depends(get_db),
 ):
     base = select(PolicyRecord).where(
-        PolicyRecord.tenant_id == tenant.id, PolicyRecord.is_active == True  # noqa: E712
+        PolicyRecord.tenant_id == tenant.id,
+        PolicyRecord.is_active == True,  # noqa: E712
     )
     count_stmt = select(func.count()).select_from(base.subquery())
     data_stmt = base.order_by(PolicyRecord.version.desc())

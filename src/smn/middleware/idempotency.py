@@ -10,16 +10,12 @@ Cache TTL is 24 hours.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
 import time
 from collections import OrderedDict
-from typing import Any
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +94,8 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     body += chunk
 
             resp_headers = {
-                k: v for k, v in response.headers.items()
+                k: v
+                for k, v in response.headers.items()
                 if k.lower() not in ("content-length", "transfer-encoding")
             }
             _store.set(cache_key, response.status_code, resp_headers, body)

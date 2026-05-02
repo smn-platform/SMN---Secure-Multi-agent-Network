@@ -55,6 +55,7 @@ class EmailConnector(BaseConnector):
             return False
         try:
             import aiosmtplib
+
             smtp = aiosmtplib.SMTP(
                 hostname=self._smtp_host,
                 port=self._smtp_port,
@@ -104,6 +105,7 @@ class EmailConnector(BaseConnector):
         msg.attach(MIMEText(body, content_type, "utf-8"))
 
         import aiosmtplib
+
         smtp = aiosmtplib.SMTP(
             hostname=self._smtp_host,
             port=self._smtp_port,
@@ -118,9 +120,7 @@ class EmailConnector(BaseConnector):
         logger.info("Email sent to %d recipients: %s", len(to), subject)
         return {"status": "sent", "recipients": len(to), "subject": subject}
 
-    def _validate_email_params(
-        self, to: list[str], subject: str, body: str
-    ) -> None:
+    def _validate_email_params(self, to: list[str], subject: str, body: str) -> None:
         """Validate email parameters for safety."""
         if not to:
             raise ValueError("At least one recipient is required")

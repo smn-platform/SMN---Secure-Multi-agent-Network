@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from smn.core.guardrails import (
     ContentPolicy,
@@ -138,15 +137,11 @@ class TestGuardrailEngine:
         assert result.action == GuardrailAction.BLOCK
 
     def test_json_schema_validation(self):
-        engine = GuardrailEngine(
-            json_schema={"type": "object", "required": ["result"]}
-        )
+        engine = GuardrailEngine(json_schema={"type": "object", "required": ["result"]})
         result = engine.check('{"result": "ok"}')
         assert result.passed
 
     def test_json_schema_failure(self):
-        engine = GuardrailEngine(
-            json_schema={"type": "object", "required": ["result"]}
-        )
+        engine = GuardrailEngine(json_schema={"type": "object", "required": ["result"]})
         result = engine.check('{"data": "wrong"}')
         assert not result.passed

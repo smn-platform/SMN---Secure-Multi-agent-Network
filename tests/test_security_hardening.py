@@ -6,10 +6,8 @@ and cannot be bypassed. Run as part of CI/CD security gate.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import re
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -18,6 +16,7 @@ from smn.config import settings
 
 # ── 1. Authentication & Authorization ─────────────────────────
 
+
 class TestAuthSecurity:
     """Verify auth cannot be bypassed."""
 
@@ -25,6 +24,7 @@ class TestAuthSecurity:
     def app_client(self):
         from fastapi.testclient import TestClient
         from smn.server import app
+
         # Disable Redis-backed rate limiter for testing
         os.environ["SMN_REDIS_URL"] = ""
         return TestClient(app, raise_server_exceptions=False)
@@ -50,6 +50,7 @@ class TestAuthSecurity:
     def test_api_key_is_hashed_not_stored_plain(self):
         """A02:2021 — Cryptographic Failures: API keys must be stored as hashes."""
         from smn.auth import hash_key
+
         key = "smn_test_key_12345"
         hashed = hash_key(key)
         assert hashed != key
@@ -58,13 +59,12 @@ class TestAuthSecurity:
 
 # ── 2. Injection Prevention ───────────────────────────────────
 
+
 class TestInjectionPrevention:
     """Verify SQL injection and command injection are prevented."""
 
     def test_sqlalchemy_uses_parameterized_queries(self):
         """A03:2021 — Injection: verify ORM usage (no raw SQL)."""
-        import ast
-        import importlib
         source_dir = os.path.join(os.path.dirname(__file__), "..", "src", "smn")
         source_dir = os.path.normpath(source_dir)
 
@@ -78,9 +78,17 @@ class TestInjectionPrevention:
                     content = f.read()
                 # Check for raw SQL string formatting (f-strings or .format with SQL-like statements)
                 # Require SQL keywords followed by FROM/INTO/SET/TABLE to reduce false positives
-                if re.search(r'f["\'].*(?:SELECT\s+\S+\s+FROM|INSERT\s+INTO|UPDATE\s+\S+\s+SET|DELETE\s+FROM|DROP\s+TABLE).*["\']', content, re.IGNORECASE):
+                if re.search(
+                    r'f["\'].*(?:SELECT\s+\S+\s+FROM|INSERT\s+INTO|UPDATE\s+\S+\s+SET|DELETE\s+FROM|DROP\s+TABLE).*["\']',
+                    content,
+                    re.IGNORECASE,
+                ):
                     dangerous_patterns.append(fpath)
-                if re.search(r'\.format\(.*\).*(?:SELECT\s+\S+\s+FROM|INSERT\s+INTO|UPDATE\s+\S+\s+SET|DELETE\s+FROM|DROP\s+TABLE)', content, re.IGNORECASE):
+                if re.search(
+                    r"\.format\(.*\).*(?:SELECT\s+\S+\s+FROM|INSERT\s+INTO|UPDATE\s+\S+\s+SET|DELETE\s+FROM|DROP\s+TABLE)",
+                    content,
+                    re.IGNORECASE,
+                ):
                     dangerous_patterns.append(fpath)
 
         assert dangerous_patterns == [], (
@@ -89,6 +97,7 @@ class TestInjectionPrevention:
 
 
 # ── 3. SSRF Protection ───────────────────────────────────────
+
 
 class TestSSRFProtection:
     """Verify connectors block SSRF attempts."""
@@ -99,10 +108,13 @@ class TestSSRFProtection:
         from smn.connectors.http import HttpConnector
         from smn.connectors.base import ConnectorConfig
 
-        connector = HttpConnector(ConnectorConfig(
-            name="test", connector_type="http",
-            params={"allowed_domains": ["example.com"]},
-        ))
+        connector = HttpConnector(
+            ConnectorConfig(
+                name="test",
+                connector_type="http",
+                params={"allowed_domains": ["example.com"]},
+            )
+        )
         await connector.connect()
         try:
             with pytest.raises(ValueError, match="(?i)blocked|not allowed|SSRF|forbidden"):
@@ -116,10 +128,13 @@ class TestSSRFProtection:
         from smn.connectors.http import HttpConnector
         from smn.connectors.base import ConnectorConfig
 
-        connector = HttpConnector(ConnectorConfig(
-            name="test", connector_type="http",
-            params={"allowed_domains": ["example.com"]},
-        ))
+        connector = HttpConnector(
+            ConnectorConfig(
+                name="test",
+                connector_type="http",
+                params={"allowed_domains": ["example.com"]},
+            )
+        )
         await connector.connect()
         try:
             with pytest.raises(ValueError):
@@ -129,6 +144,7 @@ class TestSSRFProtection:
 
 
 # ── 4. Security Misconfiguration ──────────────────────────────
+
 
 class TestSecurityConfig:
     """Verify secure defaults."""
@@ -174,12 +190,14 @@ class TestSecurityConfig:
 
 # ── 5. Input Validation ──────────────────────────────────────
 
+
 class TestInputValidation:
     """Verify inputs are validated at system boundaries."""
 
     def test_policy_rejects_invalid_risk_level(self):
         """Invalid risk levels must be rejected."""
         from smn.core.policy import Policy
+
         # Valid levels should work
         p = Policy(name="test", risk_level="limited")
         assert p.risk_level == "limited"
@@ -187,12 +205,14 @@ class TestInputValidation:
     def test_guardrail_engine_validates_output(self):
         """Guardrails must catch policy violations."""
         from smn.core.guardrails import GuardrailEngine
+
         engine = GuardrailEngine()
         # Engine should exist and have a check method
         assert hasattr(engine, "check")
 
 
 # ── 6. Audit Trail Integrity ─────────────────────────────────
+
 
 class TestAuditIntegrity:
     """Verify audit trail cannot be tampered with."""
@@ -223,16 +243,19 @@ class TestAuditIntegrity:
 
 # ── 7. Rate Limiting ─────────────────────────────────────────
 
+
 class TestRateLimiting:
     """Verify rate limiting is enforced."""
 
     def test_rate_limiter_exists(self):
         """Rate limiting middleware must be configured."""
         from smn.middleware.rate_limit import RateLimitMiddleware
+
         assert RateLimitMiddleware is not None
 
 
 # ── 8. Dependency Security ───────────────────────────────────
+
 
 class TestDependencySecurity:
     """Verify dependency security practices."""
@@ -240,6 +263,7 @@ class TestDependencySecurity:
     def test_no_wildcard_dependencies(self):
         """Dependencies must be pinned to minimum versions, not wildcards."""
         import tomllib
+
         pyproject = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
         pyproject = os.path.normpath(pyproject)
         with open(pyproject, "rb") as f:

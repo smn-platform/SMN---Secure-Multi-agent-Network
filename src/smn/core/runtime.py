@@ -24,17 +24,14 @@ import json
 import logging
 import traceback
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
-import litellm
 
 from smn.connectors.llm import reliable_completion
 from smn.core.agent import Agent, AgentResult
 from smn.core.finops import TaskBudget, estimate_llm_cost
 from smn.core.identity import check_permissions
-from smn.core.memory import SessionMemory
-from smn.core.tools import get_tool_spec, tools_to_openai_schema
+from smn.core.tools import tools_to_openai_schema
 
 logger = logging.getLogger(__name__)
 
@@ -151,9 +148,13 @@ async def execute_task(
             response = await reliable_completion(
                 model=agent.model,
                 messages=messages,
-                **({
-                    "tools": tool_schemas,
-                } if tool_schemas else {}),
+                **(
+                    {
+                        "tools": tool_schemas,
+                    }
+                    if tool_schemas
+                    else {}
+                ),
             )
             choice = response.choices[0]  # type: ignore[index]
 
@@ -201,7 +202,9 @@ async def execute_task(
 
                 # Parse arguments safely
                 try:
-                    fn_args = json.loads(fn_args_raw) if isinstance(fn_args_raw, str) else fn_args_raw
+                    fn_args = (
+                        json.loads(fn_args_raw) if isinstance(fn_args_raw, str) else fn_args_raw
+                    )
                 except json.JSONDecodeError:
                     fn_args = {}
 
@@ -229,9 +232,7 @@ async def execute_task(
                         policy_reason=perm_check.reason,
                         audit_ids=audit_ids,
                     )
-                    tool_result = json.dumps({
-                        "error": f"Permission denied: {perm_check.reason}"
-                    })
+                    tool_result = json.dumps({"error": f"Permission denied: {perm_check.reason}"})
                     messages.append({"role": "tool", "tool_call_id": tc.id, "content": tool_result})
                     continue
 
@@ -257,9 +258,9 @@ async def execute_task(
                                 policy_reason=policy_decision.reason,
                                 audit_ids=audit_ids,
                             )
-                            tool_result = json.dumps({
-                                "error": "Action requires human approval and was not approved"
-                            })
+                            tool_result = json.dumps(
+                                {"error": "Action requires human approval and was not approved"}
+                            )
                             messages.append(
                                 {"role": "tool", "tool_call_id": tc.id, "content": tool_result}
                             )
@@ -277,18 +278,16 @@ async def execute_task(
                             policy_reason=policy_decision.reason,
                             audit_ids=audit_ids,
                         )
-                        tool_result = json.dumps({
-                            "error": f"Action denied by policy: {policy_decision.reason}"
-                        })
+                        tool_result = json.dumps(
+                            {"error": f"Action denied by policy: {policy_decision.reason}"}
+                        )
                         messages.append(
                             {"role": "tool", "tool_call_id": tc.id, "content": tool_result}
                         )
                         continue
 
                 # ── Gate 4: Cost budget ──────────────────────────
-                cost_decision = agent.policy.check_cost(
-                    budget.total_usd, spec.cost_estimate_usd
-                )
+                cost_decision = agent.policy.check_cost(budget.total_usd, spec.cost_estimate_usd)
                 if not cost_decision.allowed:
                     await _audit(
                         db_session,
@@ -302,12 +301,8 @@ async def execute_task(
                         policy_reason=cost_decision.reason,
                         audit_ids=audit_ids,
                     )
-                    tool_result = json.dumps({
-                        "error": f"Budget exceeded: {cost_decision.reason}"
-                    })
-                    messages.append(
-                        {"role": "tool", "tool_call_id": tc.id, "content": tool_result}
-                    )
+                    tool_result = json.dumps({"error": f"Budget exceeded: {cost_decision.reason}"})
+                    messages.append({"role": "tool", "tool_call_id": tc.id, "content": tool_result})
                     continue
 
                 # ── Gate 5: Approval requirement ─────────────────
@@ -328,9 +323,7 @@ async def execute_task(
                             policy_reason="tool requires human approval",
                             audit_ids=audit_ids,
                         )
-                        tool_result = json.dumps({
-                            "error": "This action requires human approval"
-                        })
+                        tool_result = json.dumps({"error": "This action requires human approval"})
                         messages.append(
                             {"role": "tool", "tool_call_id": tc.id, "content": tool_result}
                         )
@@ -340,9 +333,7 @@ async def execute_task(
                 try:
                     result = await func(**fn_args)
                     tool_result = json.dumps(result, default=str)
-                    budget.record(
-                        "tool_call", fn_name, spec.cost_estimate_usd, json.dumps(fn_args)
-                    )
+                    budget.record("tool_call", fn_name, spec.cost_estimate_usd, json.dumps(fn_args))
 
                     await _audit(
                         db_session,
@@ -432,9 +423,13 @@ async def execute_task_stream(
     # Policy gate
     task_decision = agent.policy.evaluate("task:execute")
     if not task_decision.allowed:
-        yield StreamEvent("task_error", {
-            "task_id": task_id, "error": f"Task denied: {task_decision.reason}",
-        })
+        yield StreamEvent(
+            "task_error",
+            {
+                "task_id": task_id,
+                "error": f"Task denied: {task_decision.reason}",
+            },
+        )
         return
 
     system_prompt = agent._build_system_prompt()
@@ -453,13 +448,18 @@ async def execute_task_stream(
 
             step_decision = agent.policy.check_step_limit(step)
             if not step_decision.allowed:
-                yield StreamEvent("task_error", {
-                    "task_id": task_id, "error": step_decision.reason,
-                })
+                yield StreamEvent(
+                    "task_error",
+                    {
+                        "task_id": task_id,
+                        "error": step_decision.reason,
+                    },
+                )
                 return
 
             response = await reliable_completion(
-                model=agent.model, messages=messages,
+                model=agent.model,
+                messages=messages,
                 **({"tools": tool_schemas} if tool_schemas else {}),
             )
             choice = response.choices[0]
@@ -467,7 +467,12 @@ async def execute_task_stream(
             if usage:
                 in_tok = getattr(usage, "prompt_tokens", 0) or 0
                 out_tok = getattr(usage, "completion_tokens", 0) or 0
-                budget.record("llm", agent.model, estimate_llm_cost(agent.model, in_tok, out_tok), f"step {step}")
+                budget.record(
+                    "llm",
+                    agent.model,
+                    estimate_llm_cost(agent.model, in_tok, out_tok),
+                    f"step {step}",
+                )
 
             msg = choice.message
             messages.append(msg.model_dump(exclude_none=True))
@@ -475,16 +480,25 @@ async def execute_task_stream(
             if not getattr(msg, "tool_calls", None):
                 output = msg.content or ""
                 yield StreamEvent("final_answer", {"content": output})
-                yield StreamEvent("task_complete", {
-                    "task_id": task_id, "status": "completed",
-                    "steps": step, "cost_usd": budget.total_usd,
-                })
+                yield StreamEvent(
+                    "task_complete",
+                    {
+                        "task_id": task_id,
+                        "status": "completed",
+                        "steps": step,
+                        "cost_usd": budget.total_usd,
+                    },
+                )
                 return
 
             for tc in msg.tool_calls:
                 fn_name = tc.function.name
                 try:
-                    fn_args = json.loads(tc.function.arguments) if isinstance(tc.function.arguments, str) else tc.function.arguments
+                    fn_args = (
+                        json.loads(tc.function.arguments)
+                        if isinstance(tc.function.arguments, str)
+                        else tc.function.arguments
+                    )
                 except json.JSONDecodeError:
                     fn_args = {}
 
@@ -493,13 +507,27 @@ async def execute_task_stream(
 
                 if spec is None or func is None:
                     yield StreamEvent("tool_denied", {"name": fn_name, "reason": "unknown tool"})
-                    messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps({"error": f"Unknown tool: {fn_name}"})})
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": json.dumps({"error": f"Unknown tool: {fn_name}"}),
+                        }
+                    )
                     continue
 
                 perm_check = check_permissions(agent.identity, list(spec.scopes))
                 if not perm_check.allowed:
                     yield StreamEvent("tool_denied", {"name": fn_name, "reason": perm_check.reason})
-                    messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps({"error": f"Permission denied: {perm_check.reason}"})})
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": json.dumps(
+                                {"error": f"Permission denied: {perm_check.reason}"}
+                            ),
+                        }
+                    )
                     continue
 
                 policy_decision = agent.policy.evaluate(fn_name)
@@ -507,18 +535,45 @@ async def execute_task_stream(
                     if policy_decision.effect == "escalate":
                         approved = approval_callback and await approval_callback(fn_name, fn_args)
                         if not approved:
-                            yield StreamEvent("tool_denied", {"name": fn_name, "reason": "escalated, not approved"})
-                            messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps({"error": "requires human approval"})})
+                            yield StreamEvent(
+                                "tool_denied",
+                                {"name": fn_name, "reason": "escalated, not approved"},
+                            )
+                            messages.append(
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": tc.id,
+                                    "content": json.dumps({"error": "requires human approval"}),
+                                }
+                            )
                             continue
                     else:
-                        yield StreamEvent("tool_denied", {"name": fn_name, "reason": policy_decision.reason})
-                        messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps({"error": f"Denied: {policy_decision.reason}"})})
+                        yield StreamEvent(
+                            "tool_denied", {"name": fn_name, "reason": policy_decision.reason}
+                        )
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tc.id,
+                                "content": json.dumps(
+                                    {"error": f"Denied: {policy_decision.reason}"}
+                                ),
+                            }
+                        )
                         continue
 
                 cost_decision = agent.policy.check_cost(budget.total_usd, spec.cost_estimate_usd)
                 if not cost_decision.allowed:
-                    yield StreamEvent("tool_denied", {"name": fn_name, "reason": cost_decision.reason})
-                    messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps({"error": cost_decision.reason})})
+                    yield StreamEvent(
+                        "tool_denied", {"name": fn_name, "reason": cost_decision.reason}
+                    )
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": json.dumps({"error": cost_decision.reason}),
+                        }
+                    )
                     continue
 
                 yield StreamEvent("tool_call", {"name": fn_name, "args": fn_args})

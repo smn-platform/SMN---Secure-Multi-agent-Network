@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -40,6 +39,7 @@ async def test_retry_on_transient_error(mock_litellm):
 
     # Patch the module-level tuple
     import smn.connectors.llm as llm_mod
+
     orig = llm_mod._RETRYABLE_ERRORS
     llm_mod._RETRYABLE_ERRORS = (mock_litellm.RateLimitError,)
 
@@ -65,6 +65,7 @@ async def test_fallback_on_exhausted_retries(mock_litellm):
     """Falls back to next model after exhausting retries on primary."""
     mock_litellm.RateLimitError = type("RateLimitError", (Exception,), {})
     import smn.connectors.llm as llm_mod
+
     orig = llm_mod._RETRYABLE_ERRORS
     llm_mod._RETRYABLE_ERRORS = (mock_litellm.RateLimitError,)
 
@@ -93,9 +94,7 @@ async def test_fallback_on_exhausted_retries(mock_litellm):
 @patch("smn.connectors.llm.litellm")
 async def test_non_retryable_error_skips_retries(mock_litellm):
     """Non-retryable errors (e.g., auth) skip retries and try fallback."""
-    mock_litellm.acompletion = AsyncMock(
-        side_effect=[ValueError("bad request"), "fallback_ok"]
-    )
+    mock_litellm.acompletion = AsyncMock(side_effect=[ValueError("bad request"), "fallback_ok"])
     result = await reliable_completion(
         model="primary",
         messages=[{"role": "user", "content": "hi"}],

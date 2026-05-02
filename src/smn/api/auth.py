@@ -43,6 +43,7 @@ class APIKeyResponse(BaseModel):
 
 class APIKeyCreated(APIKeyResponse):
     """Response when a key is first created — includes the raw key (shown only once)."""
+
     raw_key: str
 
 
@@ -130,9 +131,7 @@ async def list_keys(
     count_stmt = select(func.count()).select_from(base.subquery())
 
     result = await db.execute(
-        base.order_by(APIKeyRecord.created_at.desc())
-        .limit(page.limit)
-        .offset(page.offset)
+        base.order_by(APIKeyRecord.created_at.desc()).limit(page.limit).offset(page.offset)
     )
     keys = result.scalars().all()
     total = (await db.execute(count_stmt)).scalar() or 0

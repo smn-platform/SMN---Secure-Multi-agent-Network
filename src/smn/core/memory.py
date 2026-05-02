@@ -149,13 +149,10 @@ async def load_memory_from_db(
     from smn.models import MemoryEntry
 
     now = datetime.now(timezone.utc)
-    stmt = (
-        select(MemoryEntry)
-        .where(
-            MemoryEntry.tenant_id == tenant_id,
-            MemoryEntry.scope == scope,
-            MemoryEntry.namespace == namespace,
-        )
+    stmt = select(MemoryEntry).where(
+        MemoryEntry.tenant_id == tenant_id,
+        MemoryEntry.scope == scope,
+        MemoryEntry.namespace == namespace,
     )
     if scope == "agent":
         stmt = stmt.where(MemoryEntry.agent_id == agent_id)

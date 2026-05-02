@@ -89,9 +89,7 @@ async def list_agents(
     db: AsyncSession = Depends(get_db),
 ):
     base = select(AgentRecord).where(AgentRecord.tenant_id == tenant.id)
-    count_stmt = select(func.count()).select_from(
-        base.subquery()
-    )
+    count_stmt = select(func.count()).select_from(base.subquery())
     data_stmt = base.order_by(AgentRecord.created_at.desc())
 
     result = await db.execute(data_stmt.limit(page.limit).offset(page.offset))

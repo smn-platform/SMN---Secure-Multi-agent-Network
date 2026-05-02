@@ -1,7 +1,7 @@
 """Tests for rate limiting middleware."""
 
 import time
-from smn.middleware.rate_limit import _InMemoryLimiter, _memory_store
+from smn.middleware.rate_limit import _InMemoryLimiter
 
 
 def test_in_memory_limiter_allows_under_limit():

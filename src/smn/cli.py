@@ -12,8 +12,6 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import json
-import sys
 from pathlib import Path
 
 import typer
@@ -111,9 +109,7 @@ def agent_list(tenant: str = typer.Option("default", help="Tenant ID")):
 
         await init_db()
         async with async_session() as db:
-            result = await db.execute(
-                select(AgentRecord).where(AgentRecord.tenant_id == tenant)
-            )
+            result = await db.execute(select(AgentRecord).where(AgentRecord.tenant_id == tenant))
             agents = result.scalars().all()
 
         table = Table(title="Agents")
@@ -221,9 +217,7 @@ app.add_typer(compliance_app, name="compliance")
 @compliance_app.command("check")
 def compliance_check(
     agent_name: str = typer.Argument(..., help="Agent name to check"),
-    frameworks: str = typer.Option(
-        "eu-ai-act,nist-ai-rmf", help="Comma-separated framework IDs"
-    ),
+    frameworks: str = typer.Option("eu-ai-act,nist-ai-rmf", help="Comma-separated framework IDs"),
     risk_level: str = typer.Option("limited", help="Risk level to assess"),
 ):
     """Run compliance assessment for an agent configuration."""

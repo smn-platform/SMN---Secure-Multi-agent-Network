@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from smn.core.agent import Agent, AgentResult
+from smn.core.agent import Agent
 from smn.core.policy import GovernanceFlags, Policy, PolicyLimits, PolicyRule
 from smn.core.tools import tool
 
@@ -101,8 +101,11 @@ def _llm_tc(name, args, call_id="call_1"):
         "role": "assistant",
         "content": None,
         "tool_calls": [
-            {"id": call_id, "type": "function",
-             "function": {"name": name, "arguments": json.dumps(args)}},
+            {
+                "id": call_id,
+                "type": "function",
+                "function": {"name": name, "arguments": json.dumps(args)},
+            },
         ],
     }
     choice = SimpleNamespace(message=msg)
@@ -154,10 +157,12 @@ async def test_gate_permission_denied(mock_rc):
 @pytest.mark.asyncio
 @patch(_RC, new_callable=AsyncMock)
 async def test_gate_policy_deny(mock_rc):
-    policy = _make_policy(rules=[
-        PolicyRule(action="task:execute", effect="allow"),
-        PolicyRule(action="add", effect="deny", reason="no math"),
-    ])
+    policy = _make_policy(
+        rules=[
+            PolicyRule(action="task:execute", effect="allow"),
+            PolicyRule(action="add", effect="deny", reason="no math"),
+        ]
+    )
     mock_rc.side_effect = [_llm_tc("add", {"a": 1, "b": 2}), _llm_final("denied")]
     result = await _make_agent(policy=policy).run("Add 1+2")
     assert result.status == "completed"
@@ -166,10 +171,12 @@ async def test_gate_policy_deny(mock_rc):
 @pytest.mark.asyncio
 @patch(_RC, new_callable=AsyncMock)
 async def test_gate_policy_escalate_approved(mock_rc):
-    policy = _make_policy(rules=[
-        PolicyRule(action="task:execute", effect="allow"),
-        PolicyRule(action="add", effect="escalate", reason="needs approval"),
-    ])
+    policy = _make_policy(
+        rules=[
+            PolicyRule(action="task:execute", effect="allow"),
+            PolicyRule(action="add", effect="escalate", reason="needs approval"),
+        ]
+    )
     mock_rc.side_effect = [_llm_tc("add", {"a": 1, "b": 2}), _llm_final("3")]
     cb = AsyncMock(return_value=True)
     result = await _make_agent(policy=policy).run("Add", approval_callback=cb)
@@ -180,10 +187,12 @@ async def test_gate_policy_escalate_approved(mock_rc):
 @pytest.mark.asyncio
 @patch(_RC, new_callable=AsyncMock)
 async def test_gate_policy_escalate_denied(mock_rc):
-    policy = _make_policy(rules=[
-        PolicyRule(action="task:execute", effect="allow"),
-        PolicyRule(action="add", effect="escalate", reason="needs approval"),
-    ])
+    policy = _make_policy(
+        rules=[
+            PolicyRule(action="task:execute", effect="allow"),
+            PolicyRule(action="add", effect="escalate", reason="needs approval"),
+        ]
+    )
     mock_rc.side_effect = [_llm_tc("add", {"a": 1, "b": 2}), _llm_final("not approved")]
     cb = AsyncMock(return_value=False)
     result = await _make_agent(policy=policy).run("Add", approval_callback=cb)
@@ -211,7 +220,9 @@ async def test_gate_approval_required_no_callback(mock_rc):
 async def test_gate_approval_required_with_callback(mock_rc):
     mock_rc.side_effect = [_llm_tc("write_data", {"key": "k", "value": "v"}), _llm_final("ok")]
     cb = AsyncMock(return_value=True)
-    result = await _make_agent(tools=[write_data], scopes=["data:write"]).run("Write", approval_callback=cb)
+    result = await _make_agent(tools=[write_data], scopes=["data:write"]).run(
+        "Write", approval_callback=cb
+    )
     assert result.status == "completed"
     cb.assert_called_once()
 
@@ -278,14 +289,30 @@ async def test_audit_ids_populated(mock_rc, db):
 @patch(_RC, new_callable=AsyncMock)
 async def test_multiple_tool_calls(mock_rc):
     tc1 = SimpleNamespace(id="c1", function=SimpleNamespace(name="add", arguments='{"a":1,"b":2}'))
-    tc2 = SimpleNamespace(id="c2", function=SimpleNamespace(name="multiply", arguments='{"a":3,"b":4}'))
+    tc2 = SimpleNamespace(
+        id="c2", function=SimpleNamespace(name="multiply", arguments='{"a":3,"b":4}')
+    )
     msg = SimpleNamespace(content=None, tool_calls=[tc1, tc2])
-    msg.model_dump = lambda exclude_none=False: {"role": "assistant", "content": None, "tool_calls": [
-        {"id": "c1", "type": "function", "function": {"name": "add", "arguments": '{"a":1,"b":2}'}},
-        {"id": "c2", "type": "function", "function": {"name": "multiply", "arguments": '{"a":3,"b":4}'}},
-    ]}
-    multi = SimpleNamespace(choices=[SimpleNamespace(message=msg)],
-                            usage=SimpleNamespace(prompt_tokens=100, completion_tokens=30))
+    msg.model_dump = lambda exclude_none=False: {
+        "role": "assistant",
+        "content": None,
+        "tool_calls": [
+            {
+                "id": "c1",
+                "type": "function",
+                "function": {"name": "add", "arguments": '{"a":1,"b":2}'},
+            },
+            {
+                "id": "c2",
+                "type": "function",
+                "function": {"name": "multiply", "arguments": '{"a":3,"b":4}'},
+            },
+        ],
+    }
+    multi = SimpleNamespace(
+        choices=[SimpleNamespace(message=msg)],
+        usage=SimpleNamespace(prompt_tokens=100, completion_tokens=30),
+    )
     mock_rc.side_effect = [multi, _llm_final("3 and 12")]
     result = await _make_agent().run("Both")
     assert result.status == "completed"
@@ -299,6 +326,7 @@ async def test_redacts_when_logging_disabled(mock_rc, db):
     result = await _make_agent(policy=policy).run("secret", db_session=db)
     assert result.status == "completed"
     from smn.core.audit import get_audit_trail
+
     entries = await get_audit_trail(db, "test-tenant")
     start = [e for e in entries if e.event_type == "task.start"]
     assert start

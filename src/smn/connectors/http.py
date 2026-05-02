@@ -17,14 +17,16 @@ import httpx
 from smn.connectors.base import BaseConnector, ConnectorConfig
 
 # SSRF protection: only allow HTTPS by default, block private ranges
-_BLOCKED_HOSTS = frozenset([
-    "localhost",
-    "127.0.0.1",
-    "0.0.0.0",
-    "::1",
-    "169.254.169.254",  # AWS metadata
-    "metadata.google.internal",
-])
+_BLOCKED_HOSTS = frozenset(
+    [
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "::1",
+        "169.254.169.254",  # AWS metadata
+        "metadata.google.internal",
+    ]
+)
 
 
 class HttpConnector(BaseConnector):
@@ -108,6 +110,4 @@ class HttpConnector(BaseConnector):
 
         # If allowlist is configured, enforce it
         if self._allowed_domains and hostname not in self._allowed_domains:
-            raise ValueError(
-                f"Domain '{hostname}' not in allowlist: {self._allowed_domains}"
-            )
+            raise ValueError(f"Domain '{hostname}' not in allowlist: {self._allowed_domains}")

@@ -10,7 +10,6 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -22,7 +21,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -102,7 +100,9 @@ class TaskRecord(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id"), nullable=False)
     input_text: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[str] = mapped_column(String(50), default="pending")  # pending|running|completed|failed|denied|killed
+    status: Mapped[str] = mapped_column(
+        String(50), default="pending"
+    )  # pending|running|completed|failed|denied|killed
     output_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     total_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
@@ -180,9 +180,7 @@ class MemoryEntry(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     access_scopes: Mapped[str] = mapped_column(Text, default="[]")  # JSON — who can read
 
-    __table_args__ = (
-        Index("ix_memory_lookup", "tenant_id", "scope", "namespace", "key"),
-    )
+    __table_args__ = (Index("ix_memory_lookup", "tenant_id", "scope", "namespace", "key"),)
 
 
 # ── Policy Records ───────────────────────────────────────────────
@@ -219,7 +217,9 @@ class APIKeyRecord(Base):
     tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     key_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    key_prefix: Mapped[str] = mapped_column(String(8), nullable=False)  # first 8 chars for identification
+    key_prefix: Mapped[str] = mapped_column(
+        String(8), nullable=False
+    )  # first 8 chars for identification
     scopes: Mapped[str] = mapped_column(Text, default='["api:full"]')  # JSON array
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
