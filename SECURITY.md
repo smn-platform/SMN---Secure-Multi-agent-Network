@@ -12,7 +12,7 @@
 
 If you discover a security vulnerability in SMN, please report it responsibly:
 
-1. **Email:** Send a detailed report to **security@leylabs.dev**
+1. **Email:** Send a detailed report to **freddie.ley@icloud.com**
 2. **Subject line:** `[SECURITY] Brief description of the issue`
 3. **Include:**
    - Description of the vulnerability

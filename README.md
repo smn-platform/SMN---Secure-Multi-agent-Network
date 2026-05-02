@@ -122,7 +122,7 @@ SMN reads from environment variables (prefix `SMN_`):
 
 ```bash
 # Clone and install
-git clone https://github.com/smn-platform/smn.git
+git clone https://github.com/smn-platform/SMN---Secure-Multi-agent-Network.git
 cd smn
 pip install -e ".[dev]"
 

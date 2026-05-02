@@ -17,14 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python SDK tests in CI pipeline
 - `CODEOWNERS` for security-sensitive file review
 
-### Changed
-- Updated `SECURITY.md` email to `security@leylabs.dev`
-- Filled all legal document placeholders (ToS, Privacy Policy, DPA) with Ley Labs Ltd details
-- Updated README with dual-repository structure documentation
-
-### Fixed
-- Updated all legal contact emails to `@leylabs.dev` domain
-
 ### Repository Structure
 - Split codebase into `community/` (MIT, open-source) and root (commercial)
 - Community repo contains core runtime, SDKs, docs, and free-tier features
@@ -78,4 +70,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bandit SAST integration for security scanning
 - 203 passing tests covering all modules
 
-[0.1.0]: https://github.com/leylabs/smn/releases/tag/v0.1.0
+[0.1.0]: https://github.com/smn-platform/smn/releases/tag/v0.1.0

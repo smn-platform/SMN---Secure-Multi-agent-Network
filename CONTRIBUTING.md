@@ -17,7 +17,7 @@ By participating in this project, you agree to maintain a respectful and profess
 
 ```bash
 # Clone the repository
-git clone https://github.com/smn-platform/smn.git
+git clone https://github.com/smn-platform/SMN---Secure-Multi-agent-Network.git
 cd smn
 
 # Create a virtual environment

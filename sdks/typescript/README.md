@@ -1,6 +1,6 @@
 # @smn/sdk
 
-Official TypeScript SDK for the [SMN](https://leylabs.dev) (Secure Multi-agent Network) platform.
+Official TypeScript SDK for the [SMN] (Secure Multi-agent Network) platform.
 
 - Zero dependencies — uses native `fetch`
 - Full TypeScript types
@@ -119,4 +119,4 @@ const agent = await smn.agents.create(
 
 ## License
 
-MIT — [Ley Labs Ltd](https://leylabs.dev)
+MIT — [Freddie Ley]
