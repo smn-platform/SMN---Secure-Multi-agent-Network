@@ -122,7 +122,7 @@ SMN reads from environment variables (prefix `SMN_`):
 
 ```bash
 # Clone and install
-git clone https://github.com/leylabs/smn.git
+git clone https://github.com/smn-platform/smn.git
 cd smn
 pip install -e ".[dev]"
 
@@ -137,7 +137,7 @@ smn serve
 
 Need multi-tenant management, SSO, Stripe billing, PostgreSQL, async task queues, multi-agent orchestration, or compliance packs?
 
-**[SMN Pro](https://leylabs.dev)** adds enterprise features on top of this open-source core.
+**[SMN Pro](Soon!)** adds enterprise features on top of this open-source core.
 
 ## Contributing
 
@@ -153,4 +153,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-Built by [Ley Labs](https://leylabs.dev)
+Built by [Freddie Ley]
