@@ -137,7 +137,7 @@ smn serve
 
 Need multi-tenant management, SSO, Stripe billing, PostgreSQL, async task queues, multi-agent orchestration, or compliance packs?
 
-**[SMN Pro](Soon!)** adds enterprise features on top of this open-source core.
+**[SMN Pro] (Soon!)** adds enterprise features on top of this open-source core.
 
 ## Contributing
 
@@ -153,4 +153,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-Built by [Freddie Ley]
+Built by [Freddie Ley](freddie.ley@icloud.com)
